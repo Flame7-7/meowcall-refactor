@@ -1,0 +1,3 @@
+[submodule "packages/db"]
+    path = packages/db
+    url = ../database.git

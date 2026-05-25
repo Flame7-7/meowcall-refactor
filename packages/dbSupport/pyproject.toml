@@ -1,0 +1,22 @@
+[project]
+name = "dbSupport"
+version = "0.1.0"
+descripton = "Meowcall-specfiic database models and schemas"
+requires-python = ">=3.14"
+dependencies = [
+    "sqlalchemy",
+    "cuid2>=2.0.1",
+]
+
+[dependency-groups]
+dev = ["atlas-provider-sqlalchemy>=0.4.0"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/models"]
+
+[tool.uv.sources]
+db = { workspace = true }

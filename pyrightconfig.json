@@ -1,0 +1,20 @@
+{
+  "typeCheckingMode": "standard",
+  "pythonVersion": "3.12",
+  "useLibraryCodeForTypes": true,
+  "reportMissingTypeStubs": false,
+  "reportArgumentType": false,
+  "reportAssignmentType": false,
+  "reportAttributeAccessIssue": false,
+  "reportCallIssue": false,
+  "reportFunctionMemberAccess": false,
+  "reportIncompatibleMethodOverride": false,
+  "reportOptionalMemberAccess": false,
+  "exclude": ["db", ".venv", "meowcall.egg-info", "__pycache__", "/node_modules", "**/node_modules", "**/.*"],
+  "executionEnvironments": [
+    {
+      "root": ".",
+      "extraPaths": [".", "packages/db/src", "packages/dbSupport/src"]
+    }
+  ]
+}

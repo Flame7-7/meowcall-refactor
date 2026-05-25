@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Transcript</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,700&family=Noto+Mono&display=swap');
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg-chat: #313338;
+            --bg-sidebar: #2b2d31;
+            --bg-hover: #2e3035;
+            --bg-secondary: #2b2d31;
+            --bg-tertiary: #1e1f22;
+            --bg-floating: #111214;
+            --bg-input: #383a40;
+            --bg-mod: #232428;
+            --text-primary: #dbdee1;
+            --text-muted: #80848e;
+            --text-link: #00a8fc;
+            --blurple: #5865f2;
+            --blurple-tint: rgba(88, 101, 242, 0.15);
+            --green: #23a55a;
+            --red: #f23f42;
+            --yellow: #f0b232;
+            --border: #3f4147;
+            --reply-bar: #4e5058;
+            --embed-bg: #2b2d31;
+            --scrollbar-thumb: #1a1b1e;
+            --font: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            --font-mono: 'gg mono', 'Noto Mono', 'Roboto Mono', 'Menlo', 'Consolas', monospace;
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 16px;
+            line-height: 1.375;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: var(--bg-chat);
+        }
+
+        #channel-header {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            height: 48px;
+            padding: 0 16px;
+            background: var(--bg-chat);
+            border-bottom: 1px solid var(--bg-tertiary);
+            box-shadow: 0 1px 0 rgba(0, 0, 0, .2);
+            z-index: 10;
+            gap: 8px;
+        }
+
+        #channel-header .ch-icon {
+            color: var(--text-muted);
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        #channel-header .ch-name {
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--text-primary);
+            white-space: nowrap;
+        }
+
+        #channel-header .divider {
+            width: 1px;
+            height: 20px;
+            background: var(--border);
+            margin: 0 4px;
+            flex-shrink: 0;
+        }
+
+        #channel-header .ch-topic {
+            font-size: 14px;
+            color: var(--text-muted);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        #messages-container {
+            flex: 1;
+            overflow-y: scroll;
+            overflow-x: hidden;
+            padding-bottom: 24px;
+        }
+
+        #messages-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #messages-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #messages-container::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 4px;
+            border: 2px solid var(--bg-chat);
+        }
+
+        .channel-intro {
+            padding: 16px 16px 0;
+            margin-bottom: 8px;
+        }
+
+        .channel-intro .intro-icon {
+            width: 68px;
+            height: 68px;
+            background: var(--bg-tertiary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .channel-intro h2 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .channel-intro p {
+            font-size: 15px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .msg-wrapper {
+            position: relative;
+            padding: 2px 48px 2px 72px;
+            min-height: 2.75rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .msg-wrapper:hover {
+            background: var(--bg-hover);
+        }
+
+        .msg-wrapper.msg-grouped {
+            padding-top: 2px;
+        }
+
+        .msg-wrapper.msg-first {
+            margin-top: 12px;
+            padding-top: 4px;
+        }
+
+        .msg-avatar {
+            position: absolute;
+            left: 16px;
+            top: 4px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .msg-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .msg-avatar .avatar-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            color: #fff;
+            border-radius: 50%;
+        }
+
+        .msg-grouped .msg-avatar {
+            display: none;
+        }
+
+        .msg-grouped .msg-ts-hover {
+            display: none;
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            text-align: center;
+            font-size: 10px;
+            color: var(--text-muted);
+            line-height: 1;
+            pointer-events: none;
+        }
+
+        .msg-wrapper:hover .msg-ts-hover {
+            display: block;
+        }
+
+        .msg-header {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin-bottom: 2px;
+        }
+
+        .msg-username {
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            line-height: 1.375;
+        }
+
+        .msg-username:hover {
+            text-decoration: underline;
+        }
+
+        .msg-timestamp {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .bot-tag {
+            display: inline-flex;
+            align-items: center;
+            background: var(--blurple);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 0 4px;
+            border-radius: 3px;
+            height: 15px;
+            line-height: 15px;
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            margin-left: 2px;
+            vertical-align: middle;
+        }
+
+        .msg-content {
+            font-size: 15px;
+            color: var(--text-primary);
+            line-height: 1.375;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .msg-content.deleted {
+            font-style: italic;
+            color: var(--text-muted);
+        }
+
+        .msg-content strong {
+            font-weight: 700;
+        }
+
+        .msg-content em {
+            font-style: italic;
+        }
+
+        .msg-content u {
+            text-decoration: underline;
+        }
+
+        .msg-content s {
+            text-decoration: line-through;
+        }
+
+        .msg-content code {
+            font-family: var(--font-mono);
+            font-size: 85%;
+            background: #1e1f22;
+            border: 1px solid #27292d;
+            border-radius: 3px;
+            padding: 0 4px;
+            white-space: pre-wrap;
+        }
+
+        .msg-content pre {
+            background: #1e1f22;
+            border: 1px solid #27292d;
+            border-radius: 4px;
+            padding: 8px 12px;
+            margin: 4px 0;
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            line-height: 1.5;
+            white-space: pre;
+        }
+
+        .msg-content pre code {
+            background: none;
+            border: none;
+            padding: 0;
+            font-size: inherit;
+        }
+
+        .edited-tag {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-left: 4px;
+            font-style: normal;
+            cursor: default;
+        }
+
+        .msg-reply {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+            position: relative;
+            padding-left: 36px;
+        }
+
+        .msg-reply::before {
+            content: '';
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            width: 24px;
+            height: 12px;
+            border-left: 2px solid var(--reply-bar);
+            border-top: 2px solid var(--reply-bar);
+            border-radius: 4px 0 0 0;
+            transform: translateY(-100%);
+        }
+
+        .reply-username {
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .reply-content {
+            font-size: 13px;
+            color: var(--text-muted);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .reply-content:hover {
+            color: var(--text-primary);
+        }
+
+        .msg-system {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 16px;
+            font-size: 14px;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .msg-system .sys-icon {
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .embed-wrapper {
+            margin-top: 4px;
+            max-width: 520px;
+        }
+
+        .embed {
+            display: flex;
+            background: var(--embed-bg);
+            border-radius: 4px;
+            overflow: hidden;
+            border-left: 4px solid var(--blurple);
+            max-width: 100%;
+        }
+
+        .embed-content {
+            flex: 1;
+            padding: 12px 16px 12px 12px;
+            overflow: hidden;
+        }
+
+        .embed-thumbnail {
+            flex-shrink: 0;
+            padding: 12px 12px 12px 0;
+        }
+
+        .embed-thumbnail img {
+            width: 80px;
+            height: 80px;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+
+        .embed-author {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+
+        .embed-author-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .embed-author-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .embed-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        a.embed-title {
+            color: var(--text-link);
+            text-decoration: none;
+        }
+
+        a.embed-title:hover {
+            text-decoration: underline;
+        }
+
+        .embed-desc {
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .embed-fields {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .embed-field {
+            min-width: 0;
+        }
+
+        .embed-field.inline {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .embed-field.block {
+            flex-basis: 100%;
+        }
+
+        .embed-field-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .embed-field-value {
+            font-size: 13px;
+            color: var(--text-primary);
+            white-space: pre-wrap;
+        }
+
+        .embed-image {
+            margin-top: 8px;
+        }
+
+        .embed-image img {
+            max-width: 100%;
+            border-radius: 4px;
+            display: block;
+            cursor: pointer;
+        }
+
+        .embed-footer {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .embed-footer-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .embed-footer-text {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .attachments-wrapper {
+            margin-top: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .attachment-image {
+            max-width: 400px;
+            max-height: 300px;
+            border-radius: 4px;
+            display: block;
+            cursor: pointer;
+            object-fit: contain;
+            background: var(--bg-tertiary);
+        }
+
+        .attachment-file {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--embed-bg);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 10px 16px;
+            max-width: 400px;
+        }
+
+        .file-icon {
+            font-size: 28px;
+            flex-shrink: 0;
+            color: var(--text-muted);
+        }
+
+        .file-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-link);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-size {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .file-download {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-size: 18px;
+            padding: 4px 8px;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: background .1s;
+        }
+
+        .file-download:hover {
+            background: var(--border);
+        }
+
+        .reactions-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .reaction {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--bg-mod);
+            border: 1px solid transparent;
+            border-radius: 8px;
+            padding: 2px 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background .1s;
+            user-select: none;
+        }
+
+        .reaction:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--border);
+        }
+
+        .reaction.self-reacted {
+            background: var(--blurple-tint);
+            border-color: rgba(88, 101, 242, .3);
+        }
+
+        .reaction .count {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .reaction.self-reacted .count {
+            color: var(--blurple);
+        }
+
+        .sticker-wrapper {
+            margin-top: 4px;
+        }
+
+        .sticker-img {
+            width: 160px;
+            height: 160px;
+            object-fit: contain;
+            cursor: pointer;
+        }
+
+        #transcript-footer {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 10px 16px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--bg-tertiary);
+            font-size: 12px;
+            color: var(--text-muted);
+            flex-wrap: wrap;
+        }
+
+        #transcript-footer span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        #lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .85);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            cursor: zoom-out;
+        }
+
+        #lightbox.open {
+            display: flex;
+        }
+
+        #lightbox img {
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: 8px;
+        }
+
+        .hl-keyword {
+            color: #c678dd;
+        }
+
+        .hl-string {
+            color: #98c379;
+        }
+
+        .hl-comment {
+            color: #5c6370;
+            font-style: italic;
+        }
+
+        .hl-number {
+            color: #d19a66;
+        }
+
+        .hl-func {
+            color: #61afef;
+        }
+
+        .hl-type {
+            color: #e5c07b;
+        }
+
+        .hl-builtin {
+            color: #56b6c2;
+        }
+
+        .date-divider {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 16px 4px;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .date-divider::before,
+        .date-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="app">
+        <div id="channel-header"></div>
+        <div id="messages-container"></div>
+        <div id="transcript-footer"></div>
+    </div>
+
+    <div id="lightbox"><img id="lightbox-img" src="" alt=""></div>
+
+    <script>
+        const transcript = {
+
+            /* ── Server & Channel ─────────────────────────────────────────── */
+            channel: {
+                name: "call-123",           // channel name (no #)
+                topic: null, // shown in header, or null
+                guildName: "Meowcall",
+                guildIcon: null                 // URL or null
+            },
+
+            exportedAt: "2025-07-14T20:00:00.000Z", // ISO 8601
+            exportedBy: "Meowcall",
+
+            /* ── Messages Array ───────────────────────────────────────────── *
+            *                                                                  *
+            *  Each object in this array is one message.                      *
+            *  Required for every normal message:                             *
+            *    id         – unique string                                   *
+            *    author     – see author schema below                         *
+            *    content    – message text (markdown supported)               *
+            *    timestamp  – ISO 8601 string                                 *
+            *                                                                  *
+            *  Optional fields:                                               *
+            *    editedAt   – ISO 8601, adds "(edited)" label                 *
+            *    reply      – quoted message object (see below)               *
+            *    embeds     – array of embed objects                          *
+            *    attachments– array of attachment objects                     *
+            *    reactions  – array of reaction objects                       *
+            *    sticker    – { name, url }                                   *
+            *    isDeleted  – true → shows "[Message deleted]"                *
+            *    isSystem   – true → renders as system message (no author)    *
+            *                                                                  *
+            *  Author schema:                                                  *
+            *    { id, username, displayName, avatarUrl, roleColor, isBot }   *
+            *    avatarUrl – URL string or null (auto-generates initials)     *
+            *    roleColor – hex string e.g. "#57f287"                        *
+            *                                                                  *
+            *  Reply schema:                                                   *
+            *    { messageId, author: { displayName, roleColor }, content }   *
+            *                                                                  *
+            *  Embed schema:                                                   *
+            *    { color, author, title, url, description,                    *
+            *      fields: [{ name, value, inline }],                         *
+            *      image, thumbnail, footer: { text, iconUrl } }              *
+            *                                                                  *
+            *  Attachment schema:                                              *
+            *    { type: "image"|"file", url, filename, size (bytes) }        *
+            *                                                                  *
+            *  Reaction schema:                                                *
+            *    { emoji, count, selfReacted }                                *
+            * ─────────────────────────────────────────────────────────────── */
+            messages: [
+
+                {
+                    id: "1",
+                    author: {
+                        id: "u1",
+                        username: "lorem_ipsum",
+                        displayName: "Lorem Ipsum",
+                        avatarUrl: null,
+                        roleColor: "#5865f2",
+                        isBot: false
+                    },
+                    content: "Lorem Ipsum",
+                    timestamp: "2025-07-14T18:00:00.000Z"
+                }
+
+            ]
+        };
+
+        function escHtml(str) {
+            if (str == null) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function avatarColor(name) {
+            const colors = ['#5865f2', '#57f287', '#fee75c', '#eb459e', '#ed4245', '#f47fff', '#00b0f4', '#f96854'];
+            let h = 0;
+            for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
+            return colors[Math.abs(h) % colors.length];
+        }
+
+        function initials(name) {
+            return name.replace(/[^a-zA-Z0-9 ]/g, '').trim().split(' ').slice(0, 2).map(w => w[0] || '').join('').toUpperCase() || '?';
+        }
+
+        function renderAvatar(author, size = 40) {
+            if (!author) return '';
+            if (author.avatarUrl) {
+                return `<img src="${escHtml(author.avatarUrl)}" alt="${escHtml(author.displayName)}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;">`;
+            }
+            const bg = avatarColor(author.username || author.displayName || '?');
+            const text = initials(author.displayName || author.username || '?');
+            const fs = Math.round(size * 0.4);
+            return `<div class="avatar-placeholder" style="background:${bg};width:${size}px;height:${size}px;font-size:${fs}px;">${escHtml(text)}</div>`;
+        }
+
+        function formatTimestamp(iso, mode = 'full') {
+            const d = new Date(iso);
+            const now = new Date();
+            const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const dMidnight = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            const diffDays = Math.round((todayMidnight - dMidnight) / 86400000);
+            const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            if (mode === 'time') return time;
+            if (diffDays === 0) return `Today at ${time}`;
+            if (diffDays === 1) return `Yesterday at ${time}`;
+            return d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) + ' ' + time;
+        }
+
+        function formatDate(iso) {
+            const d = new Date(iso);
+            const now = new Date();
+            const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const dMidnight = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            const diffDays = Math.round((todayMidnight - dMidnight) / 86400000);
+            if (diffDays === 0) return 'Today';
+            if (diffDays === 1) return 'Yesterday';
+            return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+        }
+
+        function formatFileSize(bytes) {
+            if (!bytes) return '';
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1048576).toFixed(1) + ' MB';
+        }
+
+        function highlightCode(code, lang) {
+            let out = escHtml(code);
+            if (['js', 'javascript', 'ts', 'typescript', 'rust', 'python', 'go', 'cpp', 'java', 'c'].includes((lang || '').toLowerCase())) {
+                const kw = /\b(fn|let|const|var|function|return|if|else|for|while|do|import|from|export|default|class|struct|impl|pub|use|mod|async|await|def|lambda|pass|in|and|or|not|True|False|None|type|interface|new|delete|void|int|str|bool|float|string|mut|self|super|extends|implements|throws|try|catch|finally|switch|case|break|continue|typeof|instanceof|yield|with|as|is|elif|except|raise)\b/g;
+                out = out.replace(kw, '<span class="hl-keyword">$1</span>');
+                out = out.replace(/(&#39;[^&#]*&#39;|&quot;[^&]*&quot;)/g, '<span class="hl-string">$1</span>');
+                out = out.replace(/(\/\/[^\n]*|#[^\n]*)/g, '<span class="hl-comment">$1</span>');
+                out = out.replace(/\b(\d+\.?\d*)\b/g, '<span class="hl-number">$1</span>');
+                out = out.replace(/\b([a-zA-Z_]\w*)\s*(?=\()/g, '<span class="hl-func">$1</span>');
+            }
+            return out;
+        }
+
+        function parseMarkdown(text, inline = false) {
+            if (!text) return '';
+            if (!inline) {
+                text = text.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => {
+                    const hl = highlightCode(code.replace(/\n$/, ''), lang);
+                    const lbl = lang ? `<span style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">${escHtml(lang)}</span>` : '';
+                    return `\x00PRE\x00${btoa(unescape(encodeURIComponent(lbl + '<code>' + hl + '</code>')))}\x00/PRE\x00`;
+                });
+            }
+            let parts = text.split('\x00PRE\x00');
+            let result = '';
+            for (let i = 0; i < parts.length; i++) {
+                if (i % 2 === 0) {
+                    let p = escHtml(parts[i]);
+                    p = p.replace(/`([^`]+)`/g, '<code>$1</code>');
+                    p = p.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+                    p = p.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+                    p = p.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
+                    p = p.replace(/(?<!_)_(?!_)(.+?)(?<!_)_(?!_)/g, '<em>$1</em>');
+                    p = p.replace(/__(.+?)__/g, '<u>$1</u>');
+                    p = p.replace(/~~(.+?)~~/g, '<s>$1</s>');
+                    result += p;
+                } else {
+                    const [encoded] = parts[i].split('\x00/PRE\x00');
+                    try { result += `<pre>${decodeURIComponent(escape(atob(encoded)))}</pre>`; }
+                    catch (e) { result += `<pre>${parts[i]}</pre>`; }
+                }
+            }
+            return result;
+        }
+
+        function renderReply(reply) {
+            if (!reply) return '';
+            const color = reply.author?.roleColor || 'var(--text-muted)';
+            const name = escHtml(reply.author?.displayName || 'Unknown');
+            const content = escHtml((reply.content || '').replace(/\n/g, ' ').substring(0, 100));
+            return `<div class="msg-reply">
+            <span class="reply-username" style="color:${color}">${name}</span>
+            <span class="reply-content">${content || '<em>Click to see attachment</em>'}</span>
+        </div>`;
+        }
+
+        function renderEmbed(embed) {
+            const borderColor = embed.color || 'var(--blurple)';
+            let html = `<div class="embed" style="border-left-color:${escHtml(borderColor)}">`;
+            html += `<div class="embed-content">`;
+            if (embed.author) {
+                html += `<div class="embed-author">`;
+                if (embed.author.iconUrl) html += `<img class="embed-author-icon" src="${escHtml(embed.author.iconUrl)}" alt="">`;
+                html += `<span class="embed-author-name">${escHtml(embed.author.name)}</span></div>`;
+            }
+            if (embed.title) {
+                if (embed.url) html += `<a class="embed-title" href="${escHtml(embed.url)}" target="_blank" rel="noopener">${escHtml(embed.title)}</a>`;
+                else html += `<span class="embed-title">${escHtml(embed.title)}</span>`;
+            }
+            if (embed.description) html += `<div class="embed-desc">${parseMarkdown(embed.description, true)}</div>`;
+            if (embed.fields && embed.fields.length) {
+                html += `<div class="embed-fields">`;
+                for (const f of embed.fields) {
+                    html += `<div class="${f.inline ? 'embed-field inline' : 'embed-field block'}">
+                <div class="embed-field-name">${parseMarkdown(f.name, true)}</div>
+                <div class="embed-field-value">${parseMarkdown(f.value, true)}</div>
+            </div>`;
+                }
+                html += `</div>`;
+            }
+            if (embed.image) html += `<div class="embed-image"><img src="${escHtml(embed.image)}" alt="Embed image" onclick="openLightbox(this.src)"></div>`;
+            if (embed.footer) {
+                html += `<div class="embed-footer">`;
+                if (embed.footer.iconUrl) html += `<img class="embed-footer-icon" src="${escHtml(embed.footer.iconUrl)}" alt="">`;
+                html += `<span class="embed-footer-text">${escHtml(embed.footer.text)}</span></div>`;
+            }
+            html += `</div>`;
+            if (embed.thumbnail) html += `<div class="embed-thumbnail"><img src="${escHtml(embed.thumbnail)}" alt="Thumbnail" onclick="openLightbox(this.src)"></div>`;
+            html += `</div>`;
+            return html;
+        }
+
+        function renderAttachment(att) {
+            if (att.type === 'image') {
+                return `<img class="attachment-image" src="${escHtml(att.url)}" alt="${escHtml(att.filename || 'image')}" onclick="openLightbox(this.src)" title="${escHtml(att.filename || '')}">`;
+            }
+            const ext = (att.filename || '').split('.').pop().toLowerCase();
+            const icons = { pdf: '📄', zip: '🗜️', rar: '🗜️', tar: '🗜️', gz: '🗜️', mp4: '🎬', mp3: '🎵', wav: '🎵', txt: '📝', doc: '📝', docx: '📝', xls: '📊', xlsx: '📊', ppt: '📊', pptx: '📊', png: '🖼️', jpg: '🖼️', jpeg: '🖼️', gif: '🖼️', svg: '🖼️', exe: '⚙️', dmg: '⚙️', sh: '⚙️' };
+            return `<div class="attachment-file">
+            <div class="file-icon">${icons[ext] || '📁'}</div>
+            <div class="file-info">
+            <div class="file-name">${escHtml(att.filename || 'file')}</div>
+            ${att.size ? `<div class="file-size">${formatFileSize(att.size)}</div>` : ''}
+            </div>
+            <button class="file-download" title="Download" onclick="window.open('${escHtml(att.url)}')">⬇</button>
+        </div>`;
+        }
+
+        function renderReactions(reactions) {
+            if (!reactions || !reactions.length) return '';
+            let html = '<div class="reactions-wrapper">';
+            for (const r of reactions) {
+                html += `<div class="${r.selfReacted ? 'reaction self-reacted' : 'reaction'}" title="${escHtml(r.emoji)} — ${r.count} reaction${r.count !== 1 ? 's' : ''}">
+            <span>${r.emoji}</span><span class="count">${r.count}</span>
+            </div>`;
+            }
+            return html + '</div>';
+        }
+
+        function render() {
+            const { channel, messages, exportedAt, exportedBy } = transcript;
+
+            document.getElementById('channel-header').innerHTML = `
+            <span class="ch-icon">#</span>
+            <span class="ch-name">${escHtml(channel.name)}</span>
+            ${channel.topic ? `<span class="divider"></span><span class="ch-topic">${escHtml(channel.topic)}</span>` : ''}
+        `;
+
+            const container = document.getElementById('messages-container');
+            let html = `<div class="channel-intro">
+            <div class="intro-icon">💬</div>
+            <h2>#${escHtml(channel.name)}</h2>
+            ${channel.topic ? `<p>${escHtml(channel.topic)}</p>` : ''}
+        </div>`;
+
+            let lastDate = null, lastAuthorId = null, lastMsgTime = null;
+
+            for (const msg of messages) {
+                const ts = new Date(msg.timestamp);
+                const dateStr = ts.toDateString();
+
+                if (dateStr !== lastDate) {
+                    html += `<div class="date-divider">${formatDate(msg.timestamp)}</div>`;
+                    lastDate = dateStr;
+                    lastAuthorId = null;
+                }
+
+                if (msg.isSystem) {
+                    html += `<div class="msg-system"><span class="sys-icon">👋</span><span>${escHtml(msg.content)}</span></div>`;
+                    lastAuthorId = null;
+                    continue;
+                }
+
+                const timeDiff = lastMsgTime ? (ts - lastMsgTime) / 60000 : 999;
+                const isGrouped = !msg.reply && !msg.isDeleted && msg.author && msg.author.id === lastAuthorId && timeDiff < 7;
+
+                html += `<div class="${isGrouped ? 'msg-wrapper msg-grouped' : 'msg-wrapper msg-first'}" id="msg-${escHtml(msg.id)}">`;
+
+                if (!isGrouped && msg.author) {
+                    html += `<div class="msg-avatar">${renderAvatar(msg.author, 40)}</div>`;
+                    const color = msg.author.roleColor || 'var(--text-primary)';
+                    const botTag = msg.author.isBot ? '<span class="bot-tag">BOT</span>' : '';
+                    html += `<div class="msg-header">
+                <span class="msg-username" style="color:${escHtml(color)}">${escHtml(msg.author.displayName || msg.author.username)}${botTag}</span>
+                <span class="msg-timestamp">${formatTimestamp(msg.timestamp)}</span>
+            </div>`;
+                } else if (isGrouped) {
+                    html += `<span class="msg-ts-hover">${formatTimestamp(msg.timestamp, 'time')}</span>`;
+                }
+
+                if (msg.reply) html += renderReply(msg.reply);
+
+                if (msg.isDeleted) {
+                    html += `<div class="msg-content deleted">[Message deleted]</div>`;
+                } else if (msg.content) {
+                    const editedTag = msg.editedAt ? `<span class="edited-tag">(edited)</span>` : '';
+                    html += `<div class="msg-content">${parseMarkdown(msg.content)}${editedTag}</div>`;
+                }
+
+                if (msg.embeds) for (const e of msg.embeds) html += `<div class="embed-wrapper">${renderEmbed(e)}</div>`;
+                if (msg.attachments && msg.attachments.length) {
+                    html += `<div class="attachments-wrapper">`;
+                    for (const a of msg.attachments) html += renderAttachment(a);
+                    html += `</div>`;
+                }
+                if (msg.reactions) html += renderReactions(msg.reactions);
+                if (msg.sticker) html += `<div class="sticker-wrapper"><img class="sticker-img" src="${escHtml(msg.sticker.url)}" alt="${escHtml(msg.sticker.name)}" title="${escHtml(msg.sticker.name)}"></div>`;
+
+                html += `</div>`;
+
+                if (msg.author) { lastAuthorId = msg.author.id; lastMsgTime = ts; }
+                else { lastAuthorId = null; lastMsgTime = null; }
+            }
+
+            container.innerHTML = html;
+            container.scrollTop = container.scrollHeight;
+
+            const expDate = new Date(exportedAt).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+            const msgCount = messages.filter(m => !m.isSystem).length;
+            document.getElementById('transcript-footer').innerHTML = `
+            <span>🤖 Exported by <strong>${escHtml(exportedBy)}</strong></span>
+            <span>🕐 ${expDate}</span>
+            <span>💬 ${msgCount} message${msgCount !== 1 ? 's' : ''}</span>
+        `;
+        }
+
+        function openLightbox(src) {
+            document.getElementById('lightbox-img').src = src;
+            document.getElementById('lightbox').classList.add('open');
+        }
+        document.getElementById('lightbox').addEventListener('click', function () { this.classList.remove('open'); });
+
+        render();
+    </script>
+</body>
+
+</html>
